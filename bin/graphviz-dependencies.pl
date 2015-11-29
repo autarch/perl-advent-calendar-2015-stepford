@@ -16,7 +16,7 @@ sub main {
     );
 
     $gv->add_edge(
-        from => 'Get all names & IPs',
+        from => 'Get list of children',
         to   => 'Assign UUIDs',
     );
 
@@ -36,7 +36,7 @@ sub main {
     );
 
     $gv->add_edge(
-        from => 'Get all names & IPs',
+        from => 'Get list of children',
         to   => 'Combine scores',
     );
 
