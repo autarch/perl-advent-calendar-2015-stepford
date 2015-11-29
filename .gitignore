@@ -1,7 +1,10 @@
+/*.csv
 /.mailmap
 /.tidyall.d
+/GeoLite2-City.mmdb
 /Makefile.PL
 /NN-*
 /article.html
+/naughty-nice-list.txt
 /perlcriticrc
 /weaver.ini
