@@ -1,4 +1,4 @@
-package NN::Step::CombineScores;
+package NN::Step::WriteList;
 
 use strict;
 use warnings;

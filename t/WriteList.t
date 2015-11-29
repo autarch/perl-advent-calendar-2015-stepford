@@ -6,7 +6,7 @@ use Test::More 0.96;
 use Log::Dispatch;
 use Log::Dispatch::TestDiag;
 use Path::Class qw( tempdir );
-use NN::Step::CombineScores;
+use NN::Step::WriteList;
 use Stepford::Runner;
 
 my $dir = tempdir( CLEANUP => 1 );
@@ -17,7 +17,7 @@ Stepford::Runner->new(
     step_namespaces => 'NN::Step',
     logger          => $logger,
     )->run(
-    final_steps => 'NN::Step::CombineScores',
+    final_steps => 'NN::Step::WriteList',
     config => { root_dir => $dir },
     );
 
