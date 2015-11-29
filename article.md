@@ -446,3 +446,8 @@ choice for you as well.
 It certainly worked well for those elves. Sure, the naughty and nice list they
 get is complete and utter nonsense, but it's lot quicker to generate, giving
 them more time for their pine juice-fueled Dark Souls speedruns.
+
+## The Code
+
+If you want to see all the step code for this article, check out
+[this article's GitHub repo](https://github.com/autarch/perl-advent-calendar-2015-stepford).
