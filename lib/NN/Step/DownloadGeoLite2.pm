@@ -5,6 +5,7 @@ use warnings;
 use autodie;
 use experimental 'signatures';
 
+use FindBin qw( $Bin );
 use IO::Uncompress::Gunzip qw( gunzip $GunzipError );
 use LWP::Simple qw( getstore is_success );
 use MooseX::Types::Path::Class qw( Dir File );
@@ -35,8 +36,10 @@ sub run ($self) {
     my $dir = tempdir( CLEANUP => 1 );
     my $gz_file = 'GeoLite2-City.mmdb.gz';
 
-    my $url
-        = 'http://geolite.maxmind.com/download/geoip/database/' . $gz_file;
+    # In real code we'd actually download this, checking the last mod time on
+    # the server against our local copy of the file. However, for simplicity
+    # I'm just going to stick a copy in the repo and use that.
+    my $url = "file://$Bin/../share/" . $gz_file;
     $self->logger->info("Downloading $url");
 
     my $dl_to = $dir->file($gz_file);
