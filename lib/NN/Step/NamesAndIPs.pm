@@ -5,9 +5,7 @@ use warnings;
 use autodie;
 use experimental 'signatures';
 
-use Data::GUID;
 use MooseX::Types::Path::Class qw( Dir File );
-use Text::CSV_XS;
 
 use Moose;
 
@@ -22,30 +20,30 @@ has root_dir => (
     default => '.',
 );
 
-has name_and_ip_file => (
+has names_and_ips_file => (
     traits  => ['StepProduction'],
     is      => 'ro',
     isa     => File,
     lazy    => 1,
-    builder => '_build_name_and_ip_file',
+    builder => '_build_names_and_ips_file',
 );
 
 sub run ($self) {
-    my $file = $self->name_and_ip_file;
-    my $fh   = $file->openw;
+    my $file = $self->names_and_ips_file;
 
-    $self->logger->info("Writing names and IPs with UUID to $file");
+    $self->logger->info("Writing names and IPs to $file");
 
-    my $csv = Text::CSV_XS->new( { eol => "\r\n" } );
-    while ( my $fields = $csv->getline(*DATA) ) {
-        $csv->print( $fh, [ @{$fields}, Data::GUID->new->as_string ] );
-    }
-
-    close $fh;
+    my $data = do {
+        local $/;
+        <DATA>
+    };
+    # CSV line ending per http://tools.ietf.org/html/rfc4180
+    $data =~ s/\n/\r\n/g;
+    $file->spew($data);
 }
 
-sub _build_name_and_ip_file ($self) {
-    return $self->root_dir->file('names-and-ips-with-uuids.csv');
+sub _build_names_and_ips_file ($self) {
+    return $self->root_dir->file('names-and-ips.csv');
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -63,7 +61,7 @@ __DATA__
 "Francois Vo",152.105.252.87
 "Gabrysia Dudek",122.111.226.225
 "Hildegard Brinton",211.63.237.205
-"Huey-Ling Chan",106.91.124.141
+"Huey-Ling Chen",106.91.124.141
 "Jian Lung",190.43.11.31
 "Katsuki Akimoto",193.3.30.143
 "Larry Pooter",173.11.12.99
