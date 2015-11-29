@@ -21,12 +21,20 @@ sub main {
         'root:s' => \$root,
     );
 
-    my $logger = Log::Dispatch->new( outputs =>
-            [ [ 'Screen', min_level => $debug ? 'debug' : 'warning' ] ] );
+    my $logger = Log::Dispatch->new(
+        outputs => [
+            [
+                'Screen',
+                newline => 1,
+                min_level => $debug ? 'debug' : 'warning',
+            ]
+        ]
+    );
 
     Stepford::Runner->new(
         step_namespaces => 'NN::Step',
         logger          => $logger,
+        jobs            => $jobs // 1,
         )->run(
         config => { $root ? ( root_dir => $root ) : () },
         final_steps => 'NN::Step::WriteList',
@@ -34,3 +42,5 @@ sub main {
 
     exit 0;
 }
+
+main();
