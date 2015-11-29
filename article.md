@@ -94,7 +94,7 @@ for a single set of steps should live under the same namespace. We're going to
 use `NN::Step` as our namespace prefix.
 
 ```perl
-package NN::Step::NamesAndIPs;
+package NN::Step::Children;
 
 use strict;
 use warnings;
@@ -242,7 +242,7 @@ has children_with_uuids_file => (
 );
 ```
 
-This step depends on the `children_file` created by the `NamesAndIPs`
+This step depends on the `children_file` created by the `Children`
 step. Stepford will figure this out and make sure that the steps are run in
 the correct order.
 

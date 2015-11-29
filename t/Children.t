@@ -6,13 +6,13 @@ use Test::More 0.96;
 use Log::Dispatch;
 use Log::Dispatch::TestDiag;
 use Path::Class qw( tempdir );
-use NN::Step::NamesAndIPs;
+use NN::Step::Children;
 
 my $dir = tempdir( CLEANUP => 1 );
 
 my $logger = Log::Dispatch->new(
     outputs => [ [ 'TestDiag', min_level => 'debug' ] ] );
-NN::Step::NamesAndIPs->new(
+NN::Step::Children->new(
     root_dir => $dir,
     logger   => $logger,
 )->run;

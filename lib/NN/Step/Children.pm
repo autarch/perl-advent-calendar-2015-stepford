@@ -1,4 +1,4 @@
-package NN::Step::NamesAndIPs;
+package NN::Step::Children;
 
 use strict;
 use warnings;
