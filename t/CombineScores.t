@@ -6,7 +6,7 @@ use Test::More 0.96;
 use Log::Dispatch;
 use Log::Dispatch::TestDiag;
 use Path::Class qw( tempdir );
-use NN::Step::AssignUUIDs;
+use NN::Step::CombineScores;
 use Stepford::Runner;
 
 my $dir = tempdir( CLEANUP => 1 );
@@ -17,25 +17,25 @@ Stepford::Runner->new(
     step_namespaces => 'NN::Step',
     logger          => $logger,
     )->run(
-    final_steps => 'NN::Step::AssignUUIDs',
+    final_steps => 'NN::Step::CombineScores',
     config => { root_dir => $dir },
     );
 
-my $file = $dir->file('children-with-uuids.csv');
-ok( -e $file, "$file exists");
+my $file = $dir->file('naughty-nice-list.txt');
+ok( -e $file, "$file exists" );
 
 my $content = $file->slurp;
-like(
-    $content,
-    qr/(?:
+for my $name ( 'Alexander Marer', 'Fay Delaney', 'Shing Hsu' ) {
+    like(
+        $content,
+        qr/
             ^
-            "[ a-zA-Z]+",
-            \d+\.\d+\.\d+\.\d+,
-            [A-Z0-9]{8}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{12}
-            \r\n
+            \Q$name\E\ is\ .+ \(-?\d+\).
+            \n
             $
-        )+/msx,
-    'content contains names, IPs, and UUIDs'
-);
+        /msx,
+        "content contains evaluation for $name"
+    );
+}
 
 done_testing();

@@ -1,1 +1,5 @@
+/.mailmap
+/Makefile.PL
+/NN-*
 /article.html
+/weaver.ini

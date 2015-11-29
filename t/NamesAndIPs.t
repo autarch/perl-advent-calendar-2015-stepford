@@ -17,7 +17,7 @@ NN::Step::NamesAndIPs->new(
     logger   => $logger,
 )->run;
 
-my $file = $dir->file('names-and-ips.csv');
+my $file = $dir->file('children.csv');
 ok( -e $file, "$file exists");
 
 my $content = $file->slurp;

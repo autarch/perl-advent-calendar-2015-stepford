@@ -11,63 +11,68 @@
 <polygon fill="white" stroke="none" points="-4,4 -4,-724 724,-724 724,4 -4,4"/>
 <!-- Get all names &amp; IPs -->
 <g id="node1" class="node"><title>Get all names &amp; IPs</title>
-<ellipse fill="none" stroke="black" cx="150.797" cy="-669" rx="83.2892" ry="18"/>
-<text text-anchor="middle" x="150.797" y="-665.3" font-family="Times,serif" font-size="14.00">Get all names &amp; IPs</text>
+<ellipse fill="none" stroke="black" cx="447.6" cy="-669" rx="83.2892" ry="18"/>
+<text text-anchor="middle" x="447.6" y="-665.3" font-family="Times,serif" font-size="14.00">Get all names &amp; IPs</text>
 </g>
 <!-- Assign UUIDs -->
 <g id="node2" class="node"><title>Assign UUIDs</title>
-<ellipse fill="none" stroke="black" cx="150.797" cy="-463" rx="63.0666" ry="18"/>
-<text text-anchor="middle" x="150.797" y="-459.3" font-family="Times,serif" font-size="14.00">Assign UUIDs</text>
+<ellipse fill="none" stroke="black" cx="120.6" cy="-463" rx="63.0666" ry="18"/>
+<text text-anchor="middle" x="120.6" y="-459.3" font-family="Times,serif" font-size="14.00">Assign UUIDs</text>
 </g>
 <!-- Get all names &amp; IPs&#45;&gt;Assign UUIDs -->
 <g id="edge1" class="edge"><title>Get all names &amp; IPs&#45;&gt;Assign UUIDs</title>
-<path fill="none" stroke="black" d="M150.797,-650.958C150.797,-615.633 150.797,-534.161 150.797,-491.375"/>
-<polygon fill="black" stroke="black" points="154.298,-491.137 150.797,-481.137 147.298,-491.137 154.298,-491.137"/>
-</g>
-<!-- Name score -->
-<g id="node3" class="node"><title>Name score</title>
-<ellipse fill="none" stroke="black" cx="150.797" cy="-257" rx="52.9443" ry="18"/>
-<text text-anchor="middle" x="150.797" y="-253.3" font-family="Times,serif" font-size="14.00">Name score</text>
-</g>
-<!-- Assign UUIDs&#45;&gt;Name score -->
-<g id="edge2" class="edge"><title>Assign UUIDs&#45;&gt;Name score</title>
-<path fill="none" stroke="black" d="M150.797,-444.958C150.797,-409.633 150.797,-328.161 150.797,-285.375"/>
-<polygon fill="black" stroke="black" points="154.298,-285.137 150.797,-275.137 147.298,-285.137 154.298,-285.137"/>
-</g>
-<!-- IP score -->
-<g id="node4" class="node"><title>IP score</title>
-<ellipse fill="none" stroke="black" cx="353.797" cy="-257" rx="39.4691" ry="18"/>
-<text text-anchor="middle" x="353.797" y="-253.3" font-family="Times,serif" font-size="14.00">IP score</text>
-</g>
-<!-- Assign UUIDs&#45;&gt;IP score -->
-<g id="edge3" class="edge"><title>Assign UUIDs&#45;&gt;IP score</title>
-<path fill="none" stroke="black" d="M167.41,-445.306C203.602,-408.935 289.627,-322.486 330.915,-280.995"/>
-<polygon fill="black" stroke="black" points="333.509,-283.35 338.082,-273.793 328.547,-278.412 333.509,-283.35"/>
+<path fill="none" stroke="black" d="M421.668,-651.822C362.948,-615.19 219.853,-525.92 154.347,-485.053"/>
+<polygon fill="black" stroke="black" points="155.972,-481.942 145.635,-479.618 152.267,-487.881 155.972,-481.942"/>
 </g>
 <!-- Combine scores -->
 <g id="node6" class="node"><title>Combine scores</title>
-<ellipse fill="none" stroke="black" cx="251.797" cy="-51" rx="67.3907" ry="18"/>
-<text text-anchor="middle" x="251.797" y="-47.3" font-family="Times,serif" font-size="14.00">Combine scores</text>
+<ellipse fill="none" stroke="black" cx="456.6" cy="-51" rx="67.3907" ry="18"/>
+<text text-anchor="middle" x="456.6" y="-47.3" font-family="Times,serif" font-size="14.00">Combine scores</text>
+</g>
+<!-- Get all names &amp; IPs&#45;&gt;Combine scores -->
+<g id="edge5" class="edge"><title>Get all names &amp; IPs&#45;&gt;Combine scores</title>
+<path fill="none" stroke="black" d="M472.041,-651.689C512.695,-622.899 592.784,-558.705 623.6,-481 684.489,-327.462 538.239,-142.245 479.604,-76.5537"/>
+<polygon fill="black" stroke="black" points="481.888,-73.8613 472.584,-68.7927 476.696,-78.5569 481.888,-73.8613"/>
+</g>
+<!-- Name score -->
+<g id="node3" class="node"><title>Name score</title>
+<ellipse fill="none" stroke="black" cx="161.6" cy="-257" rx="52.9443" ry="18"/>
+<text text-anchor="middle" x="161.6" y="-253.3" font-family="Times,serif" font-size="14.00">Name score</text>
+</g>
+<!-- Assign UUIDs&#45;&gt;Name score -->
+<g id="edge2" class="edge"><title>Assign UUIDs&#45;&gt;Name score</title>
+<path fill="none" stroke="black" d="M124.025,-444.958C131.14,-409.558 147.569,-327.814 156.153,-285.103"/>
+<polygon fill="black" stroke="black" points="159.617,-285.631 158.156,-275.137 152.754,-284.251 159.617,-285.631"/>
+</g>
+<!-- IP score -->
+<g id="node4" class="node"><title>IP score</title>
+<ellipse fill="none" stroke="black" cx="456.6" cy="-257" rx="39.4691" ry="18"/>
+<text text-anchor="middle" x="456.6" y="-253.3" font-family="Times,serif" font-size="14.00">IP score</text>
+</g>
+<!-- Assign UUIDs&#45;&gt;IP score -->
+<g id="edge3" class="edge"><title>Assign UUIDs&#45;&gt;IP score</title>
+<path fill="none" stroke="black" d="M146.13,-446.499C206.685,-409.734 358.875,-317.333 425.051,-277.155"/>
+<polygon fill="black" stroke="black" points="427.068,-280.025 433.799,-271.843 423.435,-274.041 427.068,-280.025"/>
 </g>
 <!-- Name score&#45;&gt;Combine scores -->
-<g id="edge6" class="edge"><title>Name score&#45;&gt;Combine scores</title>
-<path fill="none" stroke="black" d="M159.235,-238.958C176.873,-203.333 217.748,-120.773 238.78,-78.2933"/>
-<polygon fill="black" stroke="black" points="242.013,-79.6517 243.313,-69.137 235.739,-76.5458 242.013,-79.6517"/>
+<g id="edge7" class="edge"><title>Name score&#45;&gt;Combine scores</title>
+<path fill="none" stroke="black" d="M184.258,-240.331C236.467,-204.227 365.327,-115.117 425.15,-73.7487"/>
+<polygon fill="black" stroke="black" points="427.223,-76.5701 433.458,-68.0036 423.242,-70.8126 427.223,-76.5701"/>
 </g>
 <!-- IP score&#45;&gt;Combine scores -->
-<g id="edge5" class="edge"><title>IP score&#45;&gt;Combine scores</title>
-<path fill="none" stroke="black" d="M345.45,-239.306C327.706,-203.817 286.121,-120.647 264.842,-78.0889"/>
-<polygon fill="black" stroke="black" points="267.863,-76.3039 260.26,-68.9248 261.602,-79.4344 267.863,-76.3039"/>
+<g id="edge6" class="edge"><title>IP score&#45;&gt;Combine scores</title>
+<path fill="none" stroke="black" d="M456.6,-238.958C456.6,-203.633 456.6,-122.161 456.6,-79.3749"/>
+<polygon fill="black" stroke="black" points="460.1,-79.137 456.6,-69.137 453.1,-79.137 460.1,-79.137"/>
 </g>
 <!-- Download GeoLite2 database -->
 <g id="node5" class="node"><title>Download GeoLite2 database</title>
-<ellipse fill="none" stroke="black" cx="510.797" cy="-463" rx="115.534" ry="18"/>
-<text text-anchor="middle" x="510.797" y="-459.3" font-family="Times,serif" font-size="14.00">Download GeoLite2 database</text>
+<ellipse fill="none" stroke="black" cx="499.6" cy="-463" rx="115.534" ry="18"/>
+<text text-anchor="middle" x="499.6" y="-459.3" font-family="Times,serif" font-size="14.00">Download GeoLite2 database</text>
 </g>
 <!-- Download GeoLite2 database&#45;&gt;IP score -->
 <g id="edge4" class="edge"><title>Download GeoLite2 database&#45;&gt;IP score</title>
-<path fill="none" stroke="black" d="M497.682,-444.958C469.827,-408.764 404.688,-324.125 372.491,-282.29"/>
-<polygon fill="black" stroke="black" points="375.201,-280.072 366.328,-274.282 369.654,-284.342 375.201,-280.072"/>
+<path fill="none" stroke="black" d="M496.008,-444.958C488.546,-409.558 471.316,-327.814 462.313,-285.103"/>
+<polygon fill="black" stroke="black" points="465.7,-284.2 460.212,-275.137 458.85,-285.644 465.7,-284.2"/>
 </g>
 </g>
 </svg>

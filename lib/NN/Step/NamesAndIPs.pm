@@ -20,16 +20,16 @@ has root_dir => (
     default => '.',
 );
 
-has names_and_ips_file => (
+has children_file => (
     traits  => ['StepProduction'],
     is      => 'ro',
     isa     => File,
     lazy    => 1,
-    builder => '_build_names_and_ips_file',
+    builder => '_build_children_file',
 );
 
 sub run ($self) {
-    my $file = $self->names_and_ips_file;
+    my $file = $self->children_file;
 
     $self->logger->info("Writing names and IPs to $file");
 
@@ -42,13 +42,15 @@ sub run ($self) {
     $file->spew($data);
 }
 
-sub _build_names_and_ips_file ($self) {
-    return $self->root_dir->file('names-and-ips.csv');
+sub _build_children_file ($self) {
+    return $self->root_dir->file('children.csv');
 }
 
 __PACKAGE__->meta->make_immutable;
 
 1;
+
+# ABSTRACT: Generate our initial child list
 
 __DATA__
 "Alexander Marer",42.235.92.147
@@ -61,7 +63,7 @@ __DATA__
 "Francois Vo",152.105.252.87
 "Gabrysia Dudek",122.111.226.225
 "Hildegard Brinton",211.63.237.205
-"Huey-Ling Chen",106.91.124.141
+"Huey-Ling Chan",106.91.124.141
 "Jian Lung",190.43.11.31
 "Katsuki Akimoto",193.3.30.143
 "Larry Pooter",173.11.12.99

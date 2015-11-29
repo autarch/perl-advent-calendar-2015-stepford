@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html><head><title>Building Santa's Naughty and Nice List with Stepford</title></head><body><h1>Building Santa's Naughty and Nice List with Stepford
+</h1><p>Keeping the naughty and nice list up to date has been taking up way too much
+elvish time that they'd rather use for drinking pine juice and playing Dark
+Souls. So the elves pooled their money and hired me to automate building the
+list. Looking at how they'd built the list before, I realized that
+<a href="https://metacpan.org/release/Stepford">Stepford</a> was the perfect tool for the
+job!
+</p><h2>What is Stepford?
+</h2><p><a href="https://metacpan.org/release/Stepford">Stepford</a> is a tool that takes a set
+of steps (tasks), figures out their dependencies, and then runs them in the
+right order to get the result you ask for. The result itself is just another
+step that you specify when creating the
+<a href="https://metacpan.org/pod/Stepford::Runner"><code>Stepford::Runner</code></a> object. Steps
+are Perl classes built using Moose. Step dependencies are attributes with a
+special <code>trait</code>.
+</p><h3>Dependencies and Productions
+</h3><p>The &quot;big thing&quot; that Stepford does for you is look at the dependencies and
+productions of all your steps in order to figure out the overall dependency
+tree for the result you asked for.
+</p><p>Both dependencies and productions are declared as Moose attributes with a
+special <code>trait</code>. Here's an example;
+</p><pre><code class="language-perl">has geolite2_database =&gt; (
+    traits   =&gt; ['StepDependency'],
+    is       =&gt; 'ro',
+    isa      =&gt; File,
+    required =&gt; 1,
+);
+
+has scored_ip_list =&gt; (
+    traits   =&gt; ['StepProduction'],
+    is       =&gt; 'ro',
+    isa      =&gt; File,
+);</code></pre><p>We'll see how to actually populate the <code>scored_ip_list</code> later.
+</p><p>Stepford matches a production to a dependency solely by name, which means that
+attribute names for productions and dependencies must be unique to a given set
+of steps.
+</p><h3>Step Classes
+</h3><p>A &quot;Step class&quot; is any class which consumes the
+<a href="https://metacpan.org/pod/Stepford::Role::Step"><code>Stepford::Role::Step</code></a> role
+(or another role which in turn consumes that role).
+</p><h2>What Goes Into the Naughty and Nice List?
+</h2><p>The elves gave me a long list of requirements, but honestly it all seemed like
+too much trouble. And since these elves are not very technically savvy, I'm
+going to take the easy route instead and just make some stuff up.
+</p><p>Here's what we're going to do:
+</p><ul><li>Get the names and IP addresses for all the children in the world, or at
+  least a few of them and assign them a UUID.
+</li><li>Download the
+  <a href="http://dev.maxmind.com/geoip/geoip2/geolite2/">free GeoLite2 database</a> from
+  MaxMind.
+</li><li>Use the GeoLite2 database to look at each child's geographical location and
+  use that to give their IP a naughty/nice score. This will be very
+  scientific.
+</li><li>Look at each child's name and use that to give their name a naughty/nice
+  score. Again, this will be very scientific.
+</li><li>Combine the IP and name scores into a single score per child and store that
+  in a SQLite database.
+</li></ul><p>If we make a dependency graph for those steps, here's what we come up with:
+</p><p><a href="./step-graph.svg"><img src="./step-graph.svg" height="450" width="450"></a>
+</p><p>Looking at this graph, we can see a couple interesting things. First, we have
+two steps, &quot;Get all names &amp; IPs&quot; and &quot;Download GeoLite2 databases&quot;, with no
+dependencies. Next, we have steps that are dependencies dependency for more
+than one other steps, &quot;Assign UUIDs&quot; and &quot;Get all names &amp; IPs&quot;. Finally, the
+&quot;Combine scores&quot; step has three dependencies.
+</p><p>Figuring all this stuff out is what Stepford is for. In fact, it calculates a
+graph just like this internally.
+</p><h2>Building our First Step
+</h2><p>Let's start by building the step to &quot;Get all names &amp; IPs&quot;. All Stepford steps
+for a single set of steps should live under the same namespace. We're going to
+use <code>NN::Step</code> as our namespace prefix.
+</p><pre><code class="language-perl">package NN::Step::NamesAndIPs;
+
+use strict;
+use warnings;
+use autodie;
+use experimental 'signatures';
+
+use Data::GUID;
+use MooseX::Types::Path::Class qw( Dir File );
+use Text::CSV_XS;
+
+use Moose;
+
+with 'Stepford::Role::Step::FileGenerator';
+
+no warnings 'experimental::signatures';
+
+has root_dir =&gt; (
+    is      =&gt; 'ro',
+    isa     =&gt; Dir,
+    coerce  =&gt; 1,
+    default =&gt; '.',
+);
+
+has name_and_ip_file =&gt; (
+    traits  =&gt; ['StepProduction'],
+    is      =&gt; 'ro',
+    isa     =&gt; File,
+    lazy    =&gt; 1,
+    builder =&gt; '_build_name_and_ip_file',
+);
+
+sub run ($self) {
+    my $file = $self-&gt;name_and_ip_file;
+    my $fh   = $file-&gt;openw;
+
+    $self-&gt;logger-&gt;info(&quot;Writing names and IPs with UUID to $file&quot;);
+
+    my $csv = Text::CSV_XS-&gt;new( { eol =&gt; &quot;\r\n&quot; } );
+    while ( my $fields = $csv-&gt;getline(*DATA) ) {
+        $csv-&gt;print( $fh, [ @{$fields}, Data::GUID-&gt;new-&gt;as_string ] );
+    }
+
+    close $fh;
+}
+
+sub _build_name_and_ip_file ($self) {
+    return $self-&gt;root_dir-&gt;file('names-and-ips-with-uuids.csv');
+}
+
+__PACKAGE__-&gt;meta-&gt;make_immutable;
+
+1;
+
+__DATA__
+...</code></pre><p>Let's look at the interest bits more closely.
+</p><pre><code class="language-perl">with 'Stepford::Role::Step::FileGenerator';</code></pre><p>All Stepford classes must consume one of the Step roles provided by
+Stepford. This particular role tells Stepford that all of this step's outputs
+are in the form of files. This lets Stepford calculate the step's last run
+time by looking at the file's modification time. For non-file steps, you have
+to provide a <code>last_run_time</code> method of your own.
+</p><pre><code class="language-perl">has root_dir =&gt; (
+    is      =&gt; 'ro',
+    isa     =&gt; Dir,
+    coerce  =&gt; 1,
+    default =&gt; '.',
+);
+
+has name_and_ip_file =&gt; (
+    traits  =&gt; ['StepProduction'],
+    is      =&gt; 'ro',
+    isa     =&gt; File,
+    lazy    =&gt; 1,
+    builder =&gt; '_build_name_and_ip_file',
+);</code></pre><p>This class has two attributes. The <code>root_dir</code> attribute is neither a
+dependency nor a production. We'll see how we can set these sorts of
+attributes later on. The <code>name_and_ip_file</code> attribute is a production. Some
+other steps will depend on this production.
+</p><pre><code class="language-perl">sub run ($self) {
+    my $file = $self-&gt;name_and_ip_file;
+    my $fh   = $file-&gt;openw;
+
+    $self-&gt;logger-&gt;info(&quot;Writing names and IPs with UUID to $file&quot;);
+
+    my $csv = Text::CSV_XS-&gt;new( { eol =&gt; &quot;\r\n&quot; } );
+    while ( my $fields = $csv-&gt;getline(*DATA) ) {
+        $csv-&gt;print( $fh, [ @{$fields}, Data::GUID-&gt;new-&gt;as_string ] );
+    }
+
+    close $fh;
+}</code></pre><p>Every Step class must provide a <code>run</code> method. This method is expected to do
+whatever work the step does. In this case we take the data in <code>DATA</code> and turn
+it into a new CSV file.
+</p><h3>Atomic File Steps
+</h3><p>I could have used
+<a href="https://metacpan.org/pod/Stepford::Role::Step::FileGenerator::Atomic"><code>Stepford::Role::Step::FileGenerator::Atomic</code></a>
+instead. If your step is writing a file, using this role will prevent you from
+leaving behind a half-finished file if the step exits mid-work. I didn't use
+it in my example code just to keep things a little simpler, but I highly
+recommend it for production code.
+</p><h2>More Steps
+</h2><p>The other steps are pretty similar. They take some data and spit something new
+out, usually a file. Let's take a look at a selection from the step that adds
+the UUIDs:
+</p><pre><code class="language-perl">package NN::Step::AssignUUIDs;
+
+...
+
+has children_file =&gt; (
+    traits   =&gt; ['StepDependency'],
+    is       =&gt; 'ro',
+    isa      =&gt; File,
+    required =&gt; 1,
+);
+
+has children_with_uuids_file =&gt; (
+    traits  =&gt; ['StepProduction'],
+    is      =&gt; 'ro',
+    isa     =&gt; File,
+    lazy    =&gt; 1,
+    builder =&gt; '_build_children_with_uuids_file',
+);</code></pre><p>This step depends on the <code>children_file</code> created by the <code>NamesAndIPs</code>
+step. Stepford will figure this out and make sure that the steps are run in
+the correct order.
+</p><p>The <code>AssignUUIDs</code> step in turn has its own <code>StepProduction</code> which future steps
+will depend on.
+</p><p>The remaining steps follow a similar pattern. They take an input file and
+produce an output file. The last step, <code>CombineScores</code>, is a little different,
+so let's see how:
+</p><h2>Why Stepford?
+</h2><p>Stepford is lot like <code>make</code>, <code>rake</code>, and many other tools. Stepford was
+originally created to help improve our automation around building
+<a href="https://www.maxmind.com/en/geoip2-databases">GeoIP databases</a> at
+<a href="https://www.maxmind.com/">MaxMind</a>.
+</p><p>I investigated <code>make</code> and <code>rake</code>, which are both great tools. However, what
+makes them shine is how they integrate with certain environments. The <code>make</code>
+tool is great is you're interacting with a lot of existing command line tools
+like compilers, linkers, etc. And of course <code>rake</code> is great if you're dealing
+with existing Ruby code.
+</p><p>But our database building code was going to be written in Perl, so it made
+sense to write a tool in Perl.
+</p></body></html>

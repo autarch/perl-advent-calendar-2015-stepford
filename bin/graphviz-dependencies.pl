@@ -1,6 +1,9 @@
+#!/usr/bin/env perl
+
 use strict;
 use warnings;
 
+use FindBin qw( $Bin );
 use GraphViz2;
 
 sub main {
@@ -33,6 +36,11 @@ sub main {
     );
 
     $gv->add_edge(
+        from => 'Get all names & IPs',
+        to   => 'Combine scores',
+    );
+
+    $gv->add_edge(
         from => 'IP score',
         to   => 'Combine scores',
     );
@@ -44,7 +52,7 @@ sub main {
 
     $gv->run(
         format      => 'svg',
-        output_file => 'step-graph.svg',
+        output_file => "$Bin/../output/step-graph.svg",
     );
 }
 

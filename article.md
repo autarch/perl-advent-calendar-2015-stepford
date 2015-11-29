@@ -13,11 +13,11 @@ job!
 of steps (tasks), figures out their dependencies, and then runs them in the
 right order to get the result you ask for. The result itself is just another
 step that you specify when creating the
-[Stepford::Runner](https://metacpan.org/pod/Stepford::Runner) object. Steps
+[`Stepford::Runner`](https://metacpan.org/pod/Stepford::Runner) object. Steps
 are Perl classes built using Moose. Step dependencies are attributes with a
 special `trait`.
 
-## Dependencies and Productions
+### Dependencies and Productions
 
 The "big thing" that Stepford does for you is look at the dependencies and
 productions of all your steps in order to figure out the overall dependency
@@ -42,6 +42,16 @@ has scored_ip_list => (
 ```
 
 We'll see how to actually populate the `scored_ip_list` later.
+
+Stepford matches a production to a dependency solely by name, which means that
+attribute names for productions and dependencies must be unique to a given set
+of steps.
+
+### Step Classes
+
+A "Step class" is any class which consumes the
+[`Stepford::Role::Step`](https://metacpan.org/pod/Stepford::Role::Step) role
+(or another role which in turn consumes that role).
 
 ## What Goes Into the Naughty and Nice List?
 
@@ -68,13 +78,14 @@ If we make a dependency graph for those steps, here's what we come up with:
 
 <a href="./step-graph.svg"><img src="./step-graph.svg" height="450" width="450"></a>
 
-Looking at this graph, we can see a couple interesting things. First, we two
-steps, "Get all names & IPs" and "Download GeoLite2 databases", with no
-dependencies. Next, we have one step that is a dependency for two other steps,
-"Assign UUIDs". Finally, the "Combine scores" step has two dependencies.
+Looking at this graph, we can see a couple interesting things. First, we have
+two steps, "Get all names & IPs" and "Download GeoLite2 databases", with no
+dependencies. Next, we have steps that are dependencies dependency for more
+than one other steps, "Assign UUIDs" and "Get all names & IPs". Finally, the
+"Combine scores" step has three dependencies.
 
-Figuring all this stuff out is what Stepford is for, and in fact it calculates
-a graph just like this internally.
+Figuring all this stuff out is what Stepford is for. In fact, it calculates a
+graph just like this internally.
 
 ## Building our First Step
 
@@ -86,6 +97,161 @@ use `NN::Step` as our namespace prefix.
 package NN::Step::NamesAndIPs;
 
 use strict;
+use warnings;
+use autodie;
+use experimental 'signatures';
+
+use Data::GUID;
+use MooseX::Types::Path::Class qw( Dir File );
+use Text::CSV_XS;
+
+use Moose;
+
+with 'Stepford::Role::Step::FileGenerator';
+
+no warnings 'experimental::signatures';
+
+has root_dir => (
+    is      => 'ro',
+    isa     => Dir,
+    coerce  => 1,
+    default => '.',
+);
+
+has name_and_ip_file => (
+    traits  => ['StepProduction'],
+    is      => 'ro',
+    isa     => File,
+    lazy    => 1,
+    builder => '_build_name_and_ip_file',
+);
+
+sub run ($self) {
+    my $file = $self->name_and_ip_file;
+    my $fh   = $file->openw;
+
+    $self->logger->info("Writing names and IPs with UUID to $file");
+
+    my $csv = Text::CSV_XS->new( { eol => "\r\n" } );
+    while ( my $fields = $csv->getline(*DATA) ) {
+        $csv->print( $fh, [ @{$fields}, Data::GUID->new->as_string ] );
+    }
+
+    close $fh;
+}
+
+sub _build_name_and_ip_file ($self) {
+    return $self->root_dir->file('names-and-ips-with-uuids.csv');
+}
+
+__PACKAGE__->meta->make_immutable;
+
+1;
+
+__DATA__
+...
+```
+
+Let's look at the interest bits more closely.
+
+```perl
+with 'Stepford::Role::Step::FileGenerator';
+```
+
+All Stepford classes must consume one of the Step roles provided by
+Stepford. This particular role tells Stepford that all of this step's outputs
+are in the form of files. This lets Stepford calculate the step's last run
+time by looking at the file's modification time. For non-file steps, you have
+to provide a `last_run_time` method of your own.
+
+```perl
+has root_dir => (
+    is      => 'ro',
+    isa     => Dir,
+    coerce  => 1,
+    default => '.',
+);
+
+has name_and_ip_file => (
+    traits  => ['StepProduction'],
+    is      => 'ro',
+    isa     => File,
+    lazy    => 1,
+    builder => '_build_name_and_ip_file',
+);
+```
+
+This class has two attributes. The `root_dir` attribute is neither a
+dependency nor a production. We'll see how we can set these sorts of
+attributes later on. The `name_and_ip_file` attribute is a production. Some
+other steps will depend on this production.
+
+```perl
+sub run ($self) {
+    my $file = $self->name_and_ip_file;
+    my $fh   = $file->openw;
+
+    $self->logger->info("Writing names and IPs with UUID to $file");
+
+    my $csv = Text::CSV_XS->new( { eol => "\r\n" } );
+    while ( my $fields = $csv->getline(*DATA) ) {
+        $csv->print( $fh, [ @{$fields}, Data::GUID->new->as_string ] );
+    }
+
+    close $fh;
+}
+```
+
+Every Step class must provide a `run` method. This method is expected to do
+whatever work the step does. In this case we take the data in `DATA` and turn
+it into a new CSV file.
+
+### Atomic File Steps
+
+I could have used
+[`Stepford::Role::Step::FileGenerator::Atomic`](https://metacpan.org/pod/Stepford::Role::Step::FileGenerator::Atomic)
+instead. If your step is writing a file, using this role will prevent you from
+leaving behind a half-finished file if the step exits mid-work. I didn't use
+it in my example code just to keep things a little simpler, but I highly
+recommend it for production code.
+
+## More Steps
+
+The other steps are pretty similar. They take some data and spit something new
+out, usually a file. Let's take a look at a selection from the step that adds
+the UUIDs:
+
+```perl
+package NN::Step::AssignUUIDs;
+
+...
+
+has children_file => (
+    traits   => ['StepDependency'],
+    is       => 'ro',
+    isa      => File,
+    required => 1,
+);
+
+has children_with_uuids_file => (
+    traits  => ['StepProduction'],
+    is      => 'ro',
+    isa     => File,
+    lazy    => 1,
+    builder => '_build_children_with_uuids_file',
+);
+```
+
+This step depends on the `children_file` created by the `NamesAndIPs`
+step. Stepford will figure this out and make sure that the steps are run in
+the correct order.
+
+The `AssignUUIDs` step in turn has its own `StepProduction` which future steps
+will depend on.
+
+The remaining steps follow a similar pattern. They take an input file and
+produce an output file. The last step, `CombineScores`, is a little different,
+so let's see how:
 
 
 
