@@ -35,8 +35,9 @@ sub run ($self) {
 
     my $data = do {
         local $/;
-        <DATA>
+        <DATA>;
     };
+
     # CSV line ending per http://tools.ietf.org/html/rfc4180
     $data =~ s/\n/\r\n/g;
     $file->spew($data);

@@ -69,8 +69,8 @@ sub _score_for_name ($self, $name) {
     }
 
     # Lucky 7s.
-    if ( (length $name) % 7 == 0 ) {
-        return ( (length $name) / 7 ) * 5;
+    if ( ( length $name ) % 7 == 0 ) {
+        return ( ( length $name ) / 7 ) * 5;
     }
 
     # XXX - investigate Kabbalastic numerology?
@@ -82,8 +82,7 @@ sub _score_for_name ($self, $name) {
 }
 
 sub _build_name_scores_file ($self) {
-    return $self->children_with_uuids_file->parent->file(
-        'name-scores.csv');
+    return $self->children_with_uuids_file->parent->file('name-scores.csv');
 }
 
 __PACKAGE__->meta->make_immutable;

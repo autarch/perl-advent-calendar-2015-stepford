@@ -47,8 +47,7 @@ sub run ($self) {
 }
 
 sub _build_children_with_uuids_file ($self) {
-    return $self->children_file->parent->file(
-        'children-with-uuids.csv');
+    return $self->children_file->parent->file('children-with-uuids.csv');
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -125,7 +125,8 @@ sub _interpret_score ($self, $score) {
 }
 
 sub _build_naughty_nice_list ($self) {
-    return $self->children_with_uuids_file->parent->file('naughty-nice-list.txt');
+    return $self->children_with_uuids_file->parent->file(
+        'naughty-nice-list.txt');
 }
 
 __PACKAGE__->meta->make_immutable;

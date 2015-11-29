@@ -18,7 +18,7 @@ NN::Step::NamesAndIPs->new(
 )->run;
 
 my $file = $dir->file('children.csv');
-ok( -e $file, "$file exists");
+ok( -e $file, "$file exists" );
 
 my $content = $file->slurp;
 like(

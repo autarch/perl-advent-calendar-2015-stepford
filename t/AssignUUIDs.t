@@ -22,7 +22,7 @@ Stepford::Runner->new(
     );
 
 my $file = $dir->file('children-with-uuids.csv');
-ok( -e $file, "$file exists");
+ok( -e $file, "$file exists" );
 
 my $content = $file->slurp;
 like(
