@@ -1,7 +1,8 @@
 # Building Santa's Naughty and Nice List with Stepford
 
-Keeping the naughty and nice list up to date has been taking up way too much
-elvish time that they'd rather use for drinking pine juice and playing Dark
+It's a little known fact that Santa's elves are the ones responsible for
+producing his yearly naughty and nice list. But working on the list has been
+taking up time that they'd rather use for drinking pine juice and playing Dark
 Souls. So the elves pooled their money and hired me to automate building the
 list. Looking at how they'd built the list before, I realized that
 [Stepford](https://metacpan.org/release/Stepford) was the perfect tool for the
@@ -11,17 +12,17 @@ job!
 
 [Stepford](https://metacpan.org/release/Stepford) is a tool that takes a set
 of steps (tasks), figures out their dependencies, and then runs them in the
-right order to get the result you ask for. The result itself is just another
-step that you specify when creating the
+right order to get the result that you ask for. The result itself is just
+another step that you specify when creating the
 [`Stepford::Runner`](https://metacpan.org/pod/Stepford::Runner) object. Steps
-are Perl classes built using Moose. Step dependencies are attributes with a
-special `trait`.
+are Perl classes built using [`Moose`](https://metacpan.org/release/Moose).
 
 ### Dependencies and Productions
 
-The "big thing" that Stepford does for you is look at the dependencies and
-productions of all your steps in order to figure out the overall dependency
-tree for the result you asked for.
+The "big thing" that Stepford does for you is to figure out the dependencies
+needed to get the to final step. It does this by looking at the dependencies
+and productions of all your steps and then running those steps in the
+necessary order.
 
 Both dependencies and productions are declared as Moose attributes with a
 special `trait`. Here's an example;
@@ -51,9 +52,12 @@ of steps.
 
 ### Step Classes
 
-A "Step class" is any class which consumes the
+A "Step class" is any Moose class which consumes the
 [`Stepford::Role::Step`](https://metacpan.org/pod/Stepford::Role::Step) role
-(or another role which in turn consumes that role).
+(or another role which in turn consumes that role). This role in turn requires
+that a step class implement a few specific methods named `run` and
+`last_run_time`. You'll see examples of both of these methods as we go
+further.
 
 ## What Goes Into the Naughty and Nice List?
 
@@ -64,7 +68,8 @@ going to take the easy route instead and just make some stuff up.
 Here's what I'm going to do:
 
 * Get the names and IP addresses for all the children in the world, or at
-  least a few of them and assign them a UUID.
+  least a few of them.
+* Assign each child a UUID so I can track them easily.
 * Download the
   [free GeoLite2 database](http://dev.maxmind.com/geoip/geoip2/geolite2/) from
   MaxMind.
@@ -76,15 +81,15 @@ Here's what I'm going to do:
 * Combine the IP and name scores into a single score per child and generate a
   text file with the naughty/nice list.
 
-If I make a dependency graph for those steps, here's what I come up with:
+Here's a graph of each step showing each steps' dependencies:
 
 <a href="./step-graph.svg"><img src="./step-graph.svg" height="450" width="450"></a>
 
-Looking at this graph, you can see a couple interesting things. First, three
+Looking at this graph, you can see a couple interesting things. First, there
 are two steps, "Get list of children" and "Download GeoLite2 databases", with
-no dependencies. Next, there are steps that are dependencies dependency for
-more than one other steps, "Assign UUIDs" and "Get list of children". Finally,
-the "Combine scores" step has three dependencies.
+no dependencies. Next, there are steps that are dependencies for more than one
+other steps, "Assign UUIDs" and "Get list of children". Finally, the "Combine
+scores" step has three dependencies but is not a dependency of any other step.
 
 Figuring all this stuff out is what Stepford is for. In fact, it calculates a
 graph just like this internally.
@@ -152,6 +157,8 @@ __PACKAGE__->meta->make_immutable;
 1;
 
 __DATA__
+"Alexander Marer",42.235.92.147
+"Andrew Bernard Cray",205.145.143.62
 ...
 ```
 
@@ -185,7 +192,7 @@ has children_file => (
 ```
 
 This class has two attributes. The `root_dir` attribute is neither a
-dependency nor a production. You'll see how you can set this attribute later
+dependency nor a production. You'll see how to set this attribute later
 on. The `children_file` attribute is a production. Some other steps will
 depend on this production.
 
@@ -207,10 +214,10 @@ sub run ($self) {
 ```
 
 Every Step class must provide a `run` method. This method is expected to do
-whatever work the step does. In this case I take the data in `DATA` and turn
-it into a new CSV file.
+whatever work the step does. In this case I take the list of children in
+`DATA` and turn it into a CSV file.
 
-The `logger` attribute it provided to each step by the
+The `logger` attribute is provided to each step by the
 [`Stepford::Runner`](https://metacpan.org/pod/Stepford::Runner) class. You'll
 learn more about that class later.
 
@@ -219,15 +226,14 @@ learn more about that class later.
 I could have used
 [`Stepford::Role::Step::FileGenerator::Atomic`](https://metacpan.org/pod/Stepford::Role::Step::FileGenerator::Atomic)
 instead. If your step is writing a file, using this role will prevent you from
-leaving behind a half-finished file if the step exits mid-work. I didn't use
-it in my example code just to keep things a little simpler, but I highly
-recommend it for production code.
+leaving behind a half-finished file if the step dies. I didn't use it in my
+example code just to keep the code simpler, but I highly recommend it for
+production code.
 
 ## More Steps
 
 The other steps are pretty similar. They take some data and spit something new
-out, usually a file. Let's take a look at a selection from the step that adds
-the UUIDs:
+out. Let's take a look at some of the code from the step that adds the UUIDs:
 
 ```perl
 package NN::Step::AssignUUIDs;
@@ -269,7 +275,7 @@ use Moose;
 with 'Stepford::Role::Step';
 ```
 
-The first different is that I'm consuming the
+The first difference is that I'm consuming the
 [`Stepford::Role::Step`](https://metacpan.org/pod/Stepford::Role::Step) role
 instead of
 [`Stepford::Role::Step::FileGenerator`](https://metacpan.org/pod/Stepford::Role::Step::FileGenerator).
@@ -316,18 +322,22 @@ sub last_run_time ($self) {
 ```
 
 This is pretty straightforward. If the file exists, I return its last
-modification time. If not, I return C<undef>.
+modification time. If not, I return `undef`.
 
 Stepford uses the value of each step's `last_run_time` to determine whether or
 not a given step needs to be run at all. If the data in a dependency is newer
 than the data in the step that depends on that data, there's no point in
 regenerating the dependency's data.
 
+(By the way, the `last_run_time` method above is essentially the same as the
+one in `Stepford::Role::Step::FileGenerator`.)
+
 ## Running Your Steps
 
 Now that I've written my steps, how do I run them? Here's the script I wrote:
 
-```perl#!/usr/bin/env perl
+```perl
+#!/usr/bin/env perl
 
 use strict;
 use warnings;
@@ -374,7 +384,7 @@ sub main {
 main();
 ```
 
-The only interesting bit is the piece where we use
+The only interesting piece is my use of
 [`Stepford::Runner`](https://metacpan.org/pod/Stepford::Runner).
 
 ```perl
@@ -390,28 +400,28 @@ The only interesting bit is the piece where we use
 
 The `Stepford::Runner` constructor takes several named arguments. The
 `step_namespaces` argument tells Stepford under what namespace it should look
-for your steps. It will load all the classes that it finds here.
+for steps. It will load all the classes that it finds under this namespace.
 
 You can pass multiple namespaces as an array reference. When two steps have a
-production of the same name, then the step that comes first i n the list of
-namespaces wins. This is useful for testing, as it lets you mock out steps as
-needed.
+production of the same name, then the step that comes first in the list of
+namespaces wins. This is useful for testing, as it lets you mock as many steps
+as you need to.
 
-The logger can be any object that provides a certain set of methods (such as
-`debug` and `info`).
+The `logger` can be any object that provides a certain set of methods
+(`debug`, `info`, etc.).
 
 Finally, if you set `jobs` to a value greater than one, Stepford will run
-steps in parallel wherever possible, running to `$jobs` steps at once.
+steps in parallel, running up to `$jobs` steps at once whenever possible.
 
-The call to the `run` method also accepts named argument. The `config`
-argument is a hash reference that will be passed to the constructor of each
-step class as it is created. Remember way back up above when I mentioned that
-I'd show you how to set the `root_dir` attribute of the `NN::Step::Children`
-class. This is how you do that.
+The call to the `run` method also accepts named arguments. Keys in the
+`config` argument which match constructor arguments for a step will be passed
+to that step class as the step is constructed. Remember way back up above when
+I mentioned that I'd show you how to set the `root_dir` attribute of the
+`NN::Step::Children` class. This is how you do that.
 
-The `final_steps` argument can be a single step class name, or an array
-reference of names. This is what you're asking Stepford to do, and it will
-figure out all the steps necessary to get there.
+The `final_steps` argument can be a single step class name or an array
+reference of names. This is how you specify the result you're asking Stepford
+for.
 
 ## Why Stepford?
 
@@ -426,12 +436,12 @@ tool is great is you're interacting with a lot of existing command line tools
 like compilers, linkers, etc. And of course `rake` is great if you're dealing
 with existing Ruby code.
 
-But our database building code was going to be written in Perl, so it made
-sense to write a tool in Perl.
+But our database building code was is written in Perl, so it made sense to
+write a tool in Perl.
 
-If you're in a similar situation, with a code base that executes a series of
-steps towards one or more final products, then Stepford might be a good choice
-for you as well.
+If you're in a similar situation, with a Perl code base that executes a series
+of steps towards one or more final products, then Stepford might be a good
+choice for you as well.
 
 It certainly worked well for those elves. Sure, the naughty and nice list they
 get is complete and utter nonsense, but it's lot quicker to generate, giving
