@@ -1,4 +1,5 @@
 /.mailmap
+/.tidyall.d
 /Makefile.PL
 /NN-*
 /article.html
