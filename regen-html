@@ -1,3 +1,0 @@
-#!/bin/bash
-
-markdent-html --title "Building Santa's Naughty and Nice List with Stepford" --file ./article.md --dialects GitHub > output/article.html
